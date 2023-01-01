@@ -456,7 +456,7 @@ let eval
           force_stream (StateMonad.run (eval acc) st |> Result.get_ok))
       in
       let make_task_list lst =
-        let open StateMonad.Syntax in
+
         Stdlib.List.map make_task lst
       in
       Task.run pool (fun () ->

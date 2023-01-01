@@ -113,8 +113,8 @@ let summ l r =
   |> List.iter (fun _st -> Format.printf "%a" (Subst.pp Value.pp) _st)
 ;; *)
 
-let g = makerev funct 8000 Nil "y"
-let h = makerev funct 5000 Nil "x"
+let g = makerev funct 100 Nil "y"
+let h = makerev funct 100 Nil "x"
 let failwithf fmt = Format.kasprintf failwith fmt
 
 let appendo_body =
@@ -241,8 +241,9 @@ let second_logic =
   |> Stream.take ~n:(-1)
   |> (fun xs ->
        Format.printf "Got %d answers\n%!" (List.length xs);
-       xs) *)
-(* |> List.iter (fun st -> printf "%a\n" Value.pp (Value.walk st (Value.var 10))) *)
+       xs)
+  |> List.iter (fun st -> printf "%a\n" Value.pp (Value.walk st (Value.var 10)))
+;; *)
 
 (* let _ =
   let goal = (Fresh ("x", Unify (Cons (Var "x", Nil), Nil))) in
@@ -251,7 +252,7 @@ let second_logic =
   |> Result.get_ok
   |> Stream.take ~n:(-1) 
   |> List.iter (fun st -> printf "%a" (Subst.pp Value.pp) st)
-;; *)
+;;*)
 let c = Chan.make_unbounded ()
 
 (* let recv_poll = 
@@ -453,18 +454,23 @@ let make_task_list lst =
 ;;
 
 let new_conde lst =
-  Task.run pool (fun () -> List.iter (fun x -> Task.await pool x) (make_task_list lst));
+  Task.parallel_for
+    pool
+    ~start:0
+    ~finish:(List.length lst - 1)
+    ~body:(fun i ->
+      let lst = List.tl lst in
+      force_Stream (StateMonad.run (eval (List.hd lst)) State.empty |> Result.get_ok));
   merge_Stream c
 ;;
 
 (* let _ =
   StateMonad.run
-  (eval (fresh [ "x" ]
-    (CondePar
-          [ Unify (Var "x", Symbol "u")
-          ; Unify (Var "x", Symbol "v")
-          ; Unify (Var "x", Symbol "w")
-          ])))
+    (new_conde
+       [ fresh [ "x" ] (Unify (Var "x", Symbol "u"))
+       ; fresh [ "x" ] (Unify (Var "x", Symbol "v"))
+       ; fresh [ "x" ] (Unify (Var "x", Symbol "w"))
+       ])
     State.empty
   |> Result.get_ok
   |> Stream.take
@@ -542,7 +548,7 @@ let _ =
 ;; *)
 
 let appendo_body =
-  CondePar
+  Conde
     [ Conj [ Unify (Var "xs", Nil); Unify (Var "ys", Var "xys") ]
     ; Fresh
         ( "h"
@@ -558,7 +564,7 @@ let appendo_body =
     ]
 ;;
 
-let g = makerev funct 50 Nil "y"
+(* let g = makerev funct 50 Nil "y"
 
 let _ =
   let time = Sys.time() in
@@ -580,4 +586,32 @@ let _ =
     |> fun xs -> Format.printf "Got %d answers\n%!" (List.length xs)
   | Error _ -> failwithf "%s %d" __FILE__ __LINE__);
   Format.printf "Execution Conde time: %f" (Sys.time() -. time)
-;;  
+;;   *)
+let len = makerev funct 100 Nil "y"
+
+let _ =
+  let goal = Call ("reverso", [ len; Var "xs" ]) in
+  let state =
+    State.(
+      empty
+      |> "xs" --> Var 10
+      |> add_rel "appendo" [ "xs"; "ys"; "xys" ] appendo_body
+      |> add_rel "reverso" [ "xy"; "yx" ] reverso_body)
+  in
+  let wrap g =
+    let s = StateMonad.run (eval g) state in
+    s
+  in
+  let pool = Task.setup_pool ~num_domains:12 () in
+  let a = Task.async pool (fun _ -> wrap goal) in
+  let b = Task.async pool (fun _ -> wrap goal) in
+  (match Task.run pool (fun () -> Task.await pool a, Task.await pool b) with
+   | Result.Ok a, Result.Ok b -> Stream.mplus a b
+   | Ok _, Error _ | Error _, Ok _ | Error _, Error _ ->
+     failwithf "%s %d" __FILE__ __LINE__)
+  |> Stream.take ~n:(-1)
+  |> (fun xs ->
+       Format.printf "Got %d answers\n%!" (List.length xs);
+       xs)
+  |> List.iter (fun st -> printf "%a\n" Value.pp (Value.walk st (Value.var 10)))
+;;
