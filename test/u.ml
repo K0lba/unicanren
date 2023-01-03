@@ -477,7 +477,7 @@ let new_conde lst =
   |> List.iter (fun st -> printf "%a" (Subst.pp Value.pp) st)
 ;; *)
 
-let even_body =
+(* let even_body =
   CondePar
     [ Unify (Var "q", Symbol "z")
     ; Fresh
@@ -496,7 +496,7 @@ let _ =
   |> Result.get_ok
   |> Stream.take ~n:1|>(fun xs -> printf "%d" (List.length xs))
   (* |> List.iter (fun st -> printf "%a" (Value.ppw st) (Value.var 10)) *)
-;;
+;; *)
 
 (* let _ =
   let time = Sys.time() in
@@ -548,7 +548,7 @@ let _ =
 ;; *)
 
 let appendo_body =
-  Conde
+  CondePar
     [ Conj [ Unify (Var "xs", Nil); Unify (Var "ys", Var "xys") ]
     ; Fresh
         ( "h"
@@ -563,8 +563,24 @@ let appendo_body =
                     ] ) ) )
     ]
 ;;
+let reverso_body =
+  CondePar
+    [ Conj [ Unify (Var "xy", Nil); Unify (Var "yx", Nil) ]
+    ; Fresh
+        ( "h"
+        , Fresh
+            ( "tmp"
+            , Fresh
+                ( "tl"
+                , Conj
+                    [ Unify (Cons (Var "h", Var "tl"), Var "xy")
+                    ; Call ("reverso", [ Var "tl"; Var "tmp" ])
+                    ; Call ("appendo", [ Var "tmp"; Cons (Var "h", Nil); Var "yx" ])
+                    ] ) ) )
+    ]
+;;
 
-(* let g = makerev funct 50 Nil "y"
+let g = makerev funct 50 Nil "y"
 
 let _ =
   let time = Sys.time() in
@@ -578,7 +594,7 @@ let _ =
       |> "ys" --> Var 10
       |> add_rel "appendo" [ "xs"; "ys"; "xys" ] appendo_body)
   in
-  let a = StateMonad.run (eval ~trace_uni:true goal) env in
+  let a = StateMonad.run (eval goal) env in
   match a with
   | Result.Ok a ->
     a
@@ -586,10 +602,10 @@ let _ =
     |> fun xs -> Format.printf "Got %d answers\n%!" (List.length xs)
   | Error _ -> failwithf "%s %d" __FILE__ __LINE__);
   Format.printf "Execution Conde time: %f" (Sys.time() -. time)
-;;   *)
+;;  
 let len = makerev funct 100 Nil "y"
-(* 
-let _ =
+
+(* let _ =
   let goal = Call ("reverso", [ len; Var "xs" ]) in
   let state =
     State.(
