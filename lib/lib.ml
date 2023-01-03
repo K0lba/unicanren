@@ -448,7 +448,7 @@ let eval
         match Chan.recv_poll c with
         | Some x ->
           let* () = put st in
-          return (Stream.mplus (Stream.return x)) <*> merge_stream n
+          return (Stream.mplus (Stream.return x)) >>= (fun _ -> merge_stream n)
         | None -> return Stream.Nil
       in
       let make_task acc =

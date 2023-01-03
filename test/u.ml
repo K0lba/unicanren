@@ -477,8 +477,8 @@ let new_conde lst =
   |> List.iter (fun st -> printf "%a" (Subst.pp Value.pp) st)
 ;; *)
 
-(* let even_body =
-  Conde
+let even_body =
+  CondePar
     [ Unify (Var "q", Symbol "z")
     ; Fresh
         ( "tmp"
@@ -496,7 +496,7 @@ let _ =
   |> Result.get_ok
   |> Stream.take ~n:1|>(fun xs -> printf "%d" (List.length xs))
   (* |> List.iter (fun st -> printf "%a" (Value.ppw st) (Value.var 10)) *)
-;; *)
+;;
 
 (* let _ =
   let time = Sys.time() in
@@ -588,7 +588,7 @@ let _ =
   Format.printf "Execution Conde time: %f" (Sys.time() -. time)
 ;;   *)
 let len = makerev funct 100 Nil "y"
-
+(* 
 let _ =
   let goal = Call ("reverso", [ len; Var "xs" ]) in
   let state =
@@ -614,4 +614,4 @@ let _ =
        Format.printf "Got %d answers\n%!" (List.length xs);
        xs)
   |> List.iter (fun st -> printf "%a\n" Value.pp (Value.walk st (Value.var 10)))
-;;
+;; *)
