@@ -25,6 +25,7 @@ jobs:
       - name: Opam
         uses: fangyi-zhou/actions-ocaml@v1
         with:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
           ocaml_version: 5.0.0
       - name: Checkout code
         uses: actions/checkout@v3
