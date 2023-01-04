@@ -23,7 +23,9 @@ jobs:
 
     steps:
       - name: Opam
-      
+        uses: fangyi-zhou/actions-ocaml@v1
+        with:
+          ocaml_version: 5.0.0
       - name: Checkout code
         uses: actions/checkout@v3
 
