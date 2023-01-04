@@ -31,7 +31,7 @@ jobs:
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
       - run: eval $(opam config env)
-      - run: dune build bin/main.bc.js --profile="release"
+      - run: dune build bin/main.exe--profile="release"
 
       - run: opam install . --deps-only --with-test
 
