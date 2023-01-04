@@ -3,3 +3,5 @@
 (cram enable)
 
 (name unicanren)
+
+(generate_opam_files true)
